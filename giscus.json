@@ -1,6 +1,8 @@
 {
+  "defaultCommentOrder": "newest",
   "origins": [
-    "https://blog.mrkhachaturov.com/",
-    "https://mrkhachaturov.github.io/"
-  ]
+    "https://blog.mrkhachaturov.com",
+    "https://mrkhachaturov.github.io"
+  ],
+  "originsRegex": ["http://localhost:[0-9]+"]
 }
