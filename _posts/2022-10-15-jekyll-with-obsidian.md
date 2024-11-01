@@ -13,3 +13,4 @@ The actual article goes here.
 
 Some another text in order to use is. 
 
+![new.jpg](../assets/img/posts/new.jpg)
