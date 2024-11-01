@@ -10,5 +10,5 @@ tags:
 
 The actual article goes here.
 
-![[assets/images/posts/file-20241101135917542.jpg|assets/images/posts/file-20241101135917542.jpg]]
+![[file-20241101135917542.jpg|file-20241101135917542.jpg]]
 Some another text in order to use is. 
