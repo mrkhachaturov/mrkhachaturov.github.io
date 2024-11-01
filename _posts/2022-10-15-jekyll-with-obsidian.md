@@ -7,7 +7,7 @@ tags:
   - obsidian
   - new
 ---
-
+![asas.jpg](../assets/img/posts/asas.jpg)
 The actual article goes here.
 ![ai_avatar.jpg](../assets/img/posts/ai_avatar.jpg)
 
