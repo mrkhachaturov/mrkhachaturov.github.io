@@ -119,15 +119,15 @@ comments:
     issue_term: # < url | pathname | title | ...>
   # Giscus options › https://giscus.app
   giscus:
-    repo: mrkhachaturov/mrkhachaturov.github.io
-    repo_id: R_kgDONIwEXw
-    category: Comments
-    category_id: DIC_kwDONIwEX84Cj36M
-    mapping: pathname
+    repo: "mrkhachaturov/mrkhachaturov.github.io"
+    repo_id: "R_kgDONIwEXw"
+    category: "Comments"
+    category_id: "DIC_kwDONIwEX84Cj36M"
+    mapping: "pathname"
     strict: # optional, default to '0'
-    input_position: bottom
-    lang: en
-    reactions_enabled: 1
+    input_position: "bottom"
+    lang: "en"
+    reactions_enabled: "1"
 
 # Self-hosted static assets, optional › https://github.com/cotes2020/chirpy-static-assets
 assets:
