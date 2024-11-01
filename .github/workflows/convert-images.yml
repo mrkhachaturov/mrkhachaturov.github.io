@@ -1,9 +1,9 @@
 name: Convert JPG to WebP and Update Markdown on dev Branch
 
-on:
-  push:
-    branches:
-      - dev # Trigger the workflow only on pushes to the 'dev' branch
+on:  
+  push:  
+    branches:  
+      - dev # Replace with your main branch name  
     paths:
       - "_posts/**.md"
       - "assets/img/posts/**/*.jpg"
