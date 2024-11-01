@@ -1,0 +1,52 @@
+name: Convert JPG to WebP  
+
+on:  
+  push:  
+    branches:  
+      - dev # Replace with your main branch name  
+    paths:  
+      - '_posts/**.md'  
+      - '_posts/**.jpg' # Trigger also on JPG changes  
+
+jobs:  
+  convert:  
+    runs-on: ubuntu-latest  
+    steps:  
+      - uses: actions/checkout@v3  
+
+      - name: Install dependencies  
+        run: |  
+          sudo apt-get update  
+          sudo apt-get install -y webp imagemagick  
+
+      - name: Convert JPG to WebP and generate LQIP  
+        run: |  
+          find _posts -name "*.md" -print0 | while IFS= read -r -d $'\0' file; do  
+            # Extract image paths from markdown files  
+            grep -oE "!\[.*\]\(\.\./assets/img/posts/[^)]+\.jpg\)" "$file" | while read -r line; do  
+              # Extract image filename  
+              image_path=$(sed -E 's/!\[.*\]\((.*)\)/\1/' <<< "$line")  
+              image_filename=$(basename "$image_path")  
+              webp_image_path="${image_path%.jpg}.webp"  
+              lqip_data=$(convert "$image_path" -resize 20x20 -quality 75 -define jpeg:extent=1kb base64:)  
+
+
+              # Generate and replace file name in markdown files  
+              echo "Converting $image_path to $webp_image_path"  
+              cwebp -q 80 "$image_path" -o "${webp_image_path%.jpg}.webp"  
+              sed -i "s/$image_path/$webp_image_path{: lqip=\"data:image/jpeg;base64,$lqip_data\" }/g" "$file"  
+
+              # Remove original JPG file  
+              echo "Removing $image_path"  
+              rm "$image_path"  
+
+            done;  
+          done  
+
+
+
+      - name: Commit changes  
+        uses: stefanzweifel/git-auto-commit-action@v5  
+        with:  
+          commit_message: "Convert JPG to WebP and generate LQIP"  
+          file_pattern: _posts/**.md _posts/**.webp # Commit both updated MD and new WebP
