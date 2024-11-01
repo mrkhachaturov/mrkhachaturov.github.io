@@ -9,8 +9,7 @@ tags:
 ---
 
 The actual article goes here.
+![ai_avatar.jpg](../assets/img/posts/ai_avatar.jpg)
 
-![file-20241101135917542.jpg](../assets/img/posts/file-20241101135917542.jpg)
 Some another text in order to use is. 
 
-Another text
