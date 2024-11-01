@@ -119,11 +119,11 @@ comments:
     issue_term: # < url | pathname | title | ...>
   # Giscus options › https://giscus.app
   giscus:
-    repo: mrkhachaturov/mrkhachaturov.github.io
-    repo_id: R_kgDONIwEXw
-    category: Comments
-    category_id: DIC_kwDONIwEX84Cj36M
-    mapping: pathname
+    repo: "mrkhachaturov/mrkhachaturov.github.io"
+    repo_id: "R_kgDONIwEXw"
+    category: "Comments"
+    category_id: "DIC_kwDONIwEX84Cj36M"
+    mapping: "pathname"
     strict: 0 # Set to '0' or '1' as per your preference
     input_position: bottom
     lang: en
