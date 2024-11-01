@@ -1,52 +1,111 @@
-name: Convert JPG to WebP  
+name: Convert JPG to WebP and Update Markdown on dev Branch
 
-on:  
-  push:  
-    branches:  
-      - dev # Replace with your main branch name  
-    paths:  
-      - '_posts/**.md'  
-      - '_posts/**.jpg' # Trigger also on JPG changes  
+on:
+  push:
+    branches:
+      - dev # Trigger the workflow only on pushes to the 'dev' branch
+    paths:
+      - "_posts/**.md"
+      - "assets/img/posts/**/*.jpg"
 
-jobs:  
-  convert:  
-    runs-on: ubuntu-latest  
-    steps:  
-      - uses: actions/checkout@v3  
+jobs:
+  convert-images:
+    runs-on: ubuntu-latest
 
-      - name: Install dependencies  
-        run: |  
-          sudo apt-get update  
-          sudo apt-get install -y webp imagemagick  
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+        with:
+          persist-credentials: false # Important to prevent using the default token
+          fetch-depth: 0 # Ensure full history is available for making commits
 
-      - name: Convert JPG to WebP and generate LQIP  
-        run: |  
-          find _posts -name "*.md" -print0 | while IFS= read -r -d $'\0' file; do  
-            # Extract image paths from markdown files  
-            grep -oE "!\[.*\]\(\.\./assets/img/posts/[^)]+\.jpg\)" "$file" | while read -r line; do  
-              # Extract image filename  
-              image_path=$(sed -E 's/!\[.*\]\((.*)\)/\1/' <<< "$line")  
-              image_filename=$(basename "$image_path")  
-              webp_image_path="${image_path%.jpg}.webp"  
-              lqip_data=$(convert "$image_path" -resize 20x20 -quality 75 -define jpeg:extent=1kb base64:)  
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: "16" # Specify the Node.js version if necessary
 
+      - name: Install ImageMagick
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y imagemagick
 
-              # Generate and replace file name in markdown files  
-              echo "Converting $image_path to $webp_image_path"  
-              cwebp -q 80 "$image_path" -o "${webp_image_path%.jpg}.webp"  
-              sed -i "s/$image_path/$webp_image_path{: lqip=\"data:image/jpeg;base64,$lqip_data\" }/g" "$file"  
+      - name: Install jq (optional, for JSON processing)
+        run: sudo apt-get install -y jq
 
-              # Remove original JPG file  
-              echo "Removing $image_path"  
-              rm "$image_path"  
+      - name: Run image conversion and markdown update script
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # Necessary for pushing changes
+        run: |
+          #!/bin/bash
+          set -e
 
-            done;  
-          done  
+          # Function to generate LQIP using ImageMagick
+          generate_lqip() {
+            local input_image="$1"
+            # Resize to 20% and decrease quality to 10%, then encode in Base64
+            convert "$input_image" -resize 20% -quality 10 jpeg:- | base64 | tr -d '\n'
+          }
 
+          # Find all markdown files in _posts
+          find _posts -type f -name "*.md" | while read -r mdfile; do
+            echo "Processing Markdown file: $mdfile"
 
+            # Use grep to find all image references with .jpg extension
+            # This regex captures the alt text and image path
+            grep -oP '!\[\K[^]]+(?=\]\([^)]+\.jpg\))' "$mdfile" | while read -r alt_text; do
+              # Extract the image path
+              img_path=$(grep -oP "!\[$alt_text\]\(\K[^)]+(?=\.jpg\))" "$mdfile")
+              jpg_file_path="assets/img/posts/${img_path}.jpg"
+              webp_file_path="assets/img/posts/${img_path}.webp"
 
-      - name: Commit changes  
-        uses: stefanzweifel/git-auto-commit-action@v5  
-        with:  
-          commit_message: "Convert JPG to WebP and generate LQIP"  
-          file_pattern: _posts/**.md _posts/**.webp # Commit both updated MD and new WebP
+              echo "Found image: $jpg_file_path"
+
+              # Check if the .jpg file exists
+              if [ ! -f "$jpg_file_path" ]; then
+                echo "Image file $jpg_file_path does not exist. Skipping."
+                continue
+              fi
+
+              # Convert .jpg to .webp
+              convert "$jpg_file_path" -quality 80 "$webp_file_path"
+              echo "Converted $jpg_file_path to $webp_file_path"
+
+              # Generate LQIP for the .webp image
+              lqip_data=$(generate_lqip "$webp_file_path")
+              echo "Generated LQIP for $webp_file_path"
+
+              # Update the Markdown file to use .webp and embed LQIP
+              # Example:
+              # ![Alt Text](path/to/image.jpg)
+              # becomes
+              # ![Alt Text](path/to/image.webp){: lqip="data:image/webp;base64,..." }
+              sed -i "s|!\[$alt_text\](\(${img_path}\).jpg)|![\1](\1.webp){: lqip=\"data:image/webp;base64,$lqip_data\" }|g" "$mdfile"
+              echo "Updated Markdown reference to use .webp with LQIP"
+
+              # Remove the original .jpg file
+              rm "$jpg_file_path"
+              echo "Removed original image file: $jpg_file_path"
+
+            done
+          done
+
+          # Configure Git
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+          # Add changes to git
+          git add _posts/**/*.md
+          git add assets/img/posts/**/*.webp
+          git add assets/img/posts/**/*.jpg  # In case any .jpg files remain
+
+          # Commit changes if there are any
+          if ! git diff --cached --exit-code > /dev/null; then
+            git commit -m "Convert JPG images to WebP and update Markdown with LQIP [skip ci]"
+            echo "Committed changes."
+
+            # Push changes back to the dev branch
+            git push origin dev
+            echo "Pushed changes to dev branch."
+          else
+            echo "No changes to commit."
+          fi
