@@ -5,6 +5,7 @@ date: 2022-10-15 06:00:00 -0400
 filename: 2022-10-15-jekyll-with-obsidian
 tags:
   - obsidian
+  - new
 ---
 
 The actual article goes here.
